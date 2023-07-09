@@ -479,13 +479,16 @@ const Product = () => {
                 >
                   3 star
                 </a>
+
                 <div className="w-2/4 h-5 mx-4 bg-gray-200 rounded ">
                   <div
                     className="h-5 bg-yellow-300 rounded"
                     style={{
                       width: `  ${
-                        Number(product.numReviews[3]) /
-                        Number(product.reviews.length)
+                        (
+                          Number(product.numReviews[3]) /
+                          Number(product.reviews.length)
+                        ).toFixed(2) * 100
                       }%`,
                     }}
                   ></div>
