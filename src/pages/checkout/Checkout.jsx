@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import CartContext from "../../context/cartContext";
 import AuthContext from "../../context/AuthContext";
 import axios from "axios";
-// import StripeCheckout from "react-stripe-checkout";
+import { useCookies } from "react-cookie";
 import "./styles.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,6 +12,7 @@ const WEBLINK = "https://alora.onrender.com";
 const Checkout = () => {
   const { cart, cartDispatch } = useContext(CartContext);
   const { user } = useContext(AuthContext);
+  const [cookies, setCookie, removeCookie] = useCookies(["access_token"]);
   const [response, setResponse] = useState();
 
   const [address, setAddress] = useState({
@@ -77,19 +78,24 @@ const Checkout = () => {
             ),
           })
           .then(async (response) => {
-            await axios.post(`${WEBLINK}/api/order`, {
-              userId: user._id,
-              items: cart.items,
-              shippingAddress: {
-                address: address.streetAddress,
-                country: address.country,
-                city: address.city,
-              },
-              total: cart.total,
-              paymentMode: "card",
-            });
+            await axios.post(
+              `${WEBLINK}/api/order/${user._id}/${cookies.access_token}`,
+              {
+                userId: user._id,
+                items: cart.items,
+                shippingAddress: {
+                  address: address.streetAddress,
+                  country: address.country,
+                  city: address.city,
+                },
+                total: cart.total,
+                paymentMode: "card",
+              }
+            );
 
-            await axios.delete(`${WEBLINK}/api/cart/${user._id}`);
+            await axios.delete(
+              `${WEBLINK}/api/cart/${user._id}/${cookies.access_token}`
+            );
             cartDispatch({ type: "CLEAR_CART" });
             localStorage.removeItem("cart");
             return response.data;

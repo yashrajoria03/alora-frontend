@@ -10,6 +10,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../../assets/image/logo.png";
 import CartContext from "../../context/cartContext.js";
+import { useCookies } from "react-cookie";
+
 import {
   Navbar,
   MobileNav,
@@ -47,11 +49,13 @@ const Nav = () => {
     { id: "3", title: "Contact Us", url: "/contact" },
     { id: "4", title: "FAQs", url: "/faq" },
   ];
+  const [cookies, setCookie, removeCookie] = useCookies(["access_token"]);
   const handleLogout = () => {
     dispatch({ type: "LOGOUT" });
     localStorage.removeItem(user);
     localStorage.removeItem(cart);
     cartDispatch({ type: "CLEAR_CART" });
+    removeCookie("access_token");
     toast.success("Logged out successfully!", {
       position: "top-center",
       autoClose: 2000,

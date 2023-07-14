@@ -6,15 +6,19 @@ import CartContext from "../../context/cartContext.js";
 import "./login.css";
 import Logo from "../../assets/image/logo.png";
 
+import { useCookies } from "react-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import loginImg from "../../assets/image/login.png";
 import loginImg2 from "../../assets/image/login2.jpg";
+import { useEffect } from "react";
 
 const WEBLINK = "https://alora.onrender.com";
 export const Login = () => {
   const navigate = useNavigate();
   const { user, dispatch } = useContext(AuthContext);
+  const { cart, cartDispatch } = useContext(CartContext);
+
   if (user) navigate("/");
 
   //toggle for login/register
@@ -29,6 +33,9 @@ export const Login = () => {
     email: undefined,
     password: undefined,
   });
+
+  const [cookies, setCookie, removeCookie] = useCookies(["access_token"]);
+
   const handleChange = (e) => {
     if (state)
       setLoginCred((prev) => ({ ...prev, [e.target.id]: e.target.value }));
@@ -38,12 +45,12 @@ export const Login = () => {
     setState(!state);
   };
 
-  const { cart, cartDispatch } = useContext(CartContext);
-
   //function to fetch cart
   const getCart = async (userId) => {
     try {
-      const res = await axios.get(`${WEBLINK}/api/cart/find/${userId}`);
+      const res = await axios.get(
+        `${WEBLINK}/api/cart/find/${userId}/${cookies.access_token}`
+      );
       cartDispatch({ type: "GET_CART", payload: res.data });
     } catch (err) {
       console.log(err);
@@ -84,14 +91,16 @@ export const Login = () => {
           progress: undefined,
           theme: "colored",
         });
+        setCookie("access_token", res.data.token);
         dispatch({ type: "LOGIN_SUCCESS", payload: res.data.details });
-        getCart(res.data.details._id);
+        getCart(res.data.details._id, res.data.token);
         navigate("/");
       } catch (err) {
         console.log(err);
       }
     }
   };
+
   // return (
   //   <div className="forms-section">
   //     <ToastContainer

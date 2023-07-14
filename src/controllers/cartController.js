@@ -2,10 +2,14 @@ import axios from "axios";
 import { useContext } from "react";
 import CartContext from "../context/cartContext";
 
-const WEBLINK = "https://alora.onrender.com/";
-export const getCart = (id) => (dispatch) => {
+import { useCookies } from "react-cookie";
+
+// const WEBLINK = "https://alora.onrender.com/";
+const WEBLINK = "http://localhost:8000/";
+
+export const getCart = (id, token) => (dispatch) => {
   axios
-    .get(`${WEBLINK}api/cart/${id}`)
+    .get(`${WEBLINK}api/cart/${id}/${token}`)
     .then((res) =>
       dispatch({
         type: "GET_CART",
@@ -15,9 +19,9 @@ export const getCart = (id) => (dispatch) => {
     .catch((err) => console.log(err));
 };
 
-export const updateCart = (userId, productId, qty) => (dispatch) => {
+export const updateCart = (userId, productId, qty, token) => (dispatch) => {
   axios
-    .put(`${WEBLINK}api/cart/${userId}`, {
+    .put(`${WEBLINK}api/cart/${userId}/${token}`, {
       productId,
       qty,
     })
@@ -32,9 +36,9 @@ export const updateCart = (userId, productId, qty) => (dispatch) => {
     });
 };
 
-export const addToCart = (id, productId, quantity) => (dispatch) => {
+export const addToCart = (id, productId, quantity, token) => (dispatch) => {
   axios
-    .post(`${WEBLINK}api/cart/${id}`, {
+    .post(`${WEBLINK}api/cart/${id}/${token}`, {
       productId,
       quantity,
     })
@@ -47,9 +51,9 @@ export const addToCart = (id, productId, quantity) => (dispatch) => {
     .catch((err) => console.log(err));
 };
 
-export const deleteFromCart = (userId, itemId) => (dispatch) => {
+export const deleteFromCart = (userId, itemId, token) => (dispatch) => {
   axios
-    .delete(`${WEBLINK}api/cart/${userId}/${itemId}`)
+    .delete(`${WEBLINK}api/cart/${userId}/${itemId}/${token}`)
     .then((res) =>
       dispatch({
         type: "DELETE_FROM_CART",

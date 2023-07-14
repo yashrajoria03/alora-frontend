@@ -10,8 +10,10 @@ import { addToCart } from "../../controllers/cartController";
 import AuthContext from "../../context/AuthContext";
 import CartContext from "../../context/cartContext";
 import { PiShoppingCartThin } from "react-icons/pi";
+import { useCookies } from "react-cookie";
 
 const WEBLINK = "https://alora.onrender.com";
+
 const Featured = () => {
   const { user } = useContext(AuthContext);
   const { cart, cartDispatch } = useContext(CartContext);
@@ -20,17 +22,20 @@ const Featured = () => {
   const [loading, setLoading] = useState(false);
   const { productList, AllProductDispatch } = useContext(AllProductContext);
 
+  const [cookies, setCookie, removeCookie] = useCookies(["access_token"]);
   // console.log("", localStorage.getItem("asdsad"));
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        await axios.get(`${WEBLINK}/api/products/`).then((data) => {
-          setProduct(data.data);
-          setLoading(true);
-          AllProductDispatch({ type: "GET_LIST", payload: data.data });
-          return data.data;
-        });
+        await axios
+          .get(`${WEBLINK}/api/products/${cookies.access_token}`)
+          .then((data) => {
+            setProduct(data.data);
+            setLoading(true);
+            AllProductDispatch({ type: "GET_LIST", payload: data.data });
+            return data.data;
+          });
 
         // console.log("fetched data is:", fetchedProducts);
       } catch (err) {
@@ -51,7 +56,7 @@ const Featured = () => {
 
   // if (!productList) AllProductDispatch({ type: "GET_LIST", payload: product });
   const handleClick = (id) => {
-    addToCart(user._id, id, 1)(cartDispatch);
+    addToCart(user._id, id, 1, cookies.access_token)(cartDispatch);
   };
 
   return loading ? (
@@ -63,79 +68,79 @@ const Featured = () => {
       </div>
       <div className="w-fit mx-auto grid grid-cols-1 lg:grid-cols-4 md:grid-cols-2 justify-items-center justify-center gap-y-6 gap-x-12 mt-10 mb-5">
         {/* <div className="flex w-full   overflow-x-scroll scrollbar-hide gap-2 md:gap-2 "> */}
-        {product.map((item) => (
-          <div class="w-80 bg-white shadow rounded">
+        {product.map((item, idx) => (
+          <div className="w-80 bg-white shadow rounded" key={idx}>
             <Link to={`/product/${item._id}`}>
               <div
-                class="h-48 w-full  flex flex-col justify-between p-4 bg-contain bg-no-repeat bg-center"
+                className="h-48 w-full  flex flex-col justify-between p-4 bg-contain bg-no-repeat bg-center"
                 style={{ backgroundImage: `url(${item.coverImage})` }}
               >
-                <div class="flex justify-between">
-                  <button class="text-white hover:text-blue-500">
+                <div className="flex justify-between">
+                  <button className="text-white hover:text-blue-500">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      class="h-6 w-6"
+                      className="h-6 w-6"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
                     >
                       <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
                         d="M12 4v16m8-8H4"
                       />
                     </svg>
                   </button>
                 </div>
                 <div>
-                  <span class="uppercase text-xs bg-green-50 p-0.5 border-green-500 border rounded text-green-700 font-medium select-none">
+                  <span className="uppercase text-xs bg-green-50 p-0.5 border-green-500 border rounded text-green-700 font-medium select-none">
                     available
                   </span>
                 </div>
               </div>
             </Link>
-            <div class="p-4 flex flex-col items-center">
+            <div className="p-4 flex flex-col items-center">
               <Link to={`/product/${item._id}`}>
-                <p class="text-gray-400 font-light text-xs text-center">
+                <p className="text-gray-400 font-light text-xs text-center">
                   {item.brand}
                 </p>
-                <h1 class="text-gray-800 text-center mt-1">
+                <h1 className="text-gray-800 text-center mt-1">
                   {item.title.substring(0, 30)}...
                 </h1>
-                <p class="text-center text-gray-800 mt-1">₹{item.price}</p>
-                {/* <div class="inline-flex items-center mt-2">
-                <button class="bg-white rounded-l border text-gray-600 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 inline-flex items-center px-2 py-1 border-r border-gray-200">
+                <p className="text-center text-gray-800 mt-1">₹{item.price}</p>
+                {/* <div className="inline-flex items-center mt-2">
+                <button className="bg-white rounded-l border text-gray-600 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 inline-flex items-center px-2 py-1 border-r border-gray-200">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-4"
+                    className="h-6 w-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
                     <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
                       d="M20 12H4"
                     />
                   </svg>
                 </button>
-                <div class="bg-gray-100 border-t border-b border-gray-100 text-gray-600 hover:bg-gray-100 inline-flex items-center px-4 py-1 select-none">
+                <div className="bg-gray-100 border-t border-b border-gray-100 text-gray-600 hover:bg-gray-100 inline-flex items-center px-4 py-1 select-none">
                   {qty.productId}
                 </div>
-                <button class="bg-white rounded-r border text-gray-600 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 inline-flex items-center px-2 py-1 border-r border-gray-200">
+                <button className="bg-white rounded-r border text-gray-600 hover:bg-gray-100 active:bg-gray-200 disabled:opacity-50 inline-flex items-center px-2 py-1 border-r border-gray-200">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-6 w-4"
+                    className="h-6 w-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
                     <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
@@ -143,7 +148,7 @@ const Featured = () => {
               </div> */}
               </Link>
               <button
-                class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 mt-4 w-full flex items-center justify-center gap-2"
+                className="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 mt-4 w-full flex items-center justify-center gap-2"
                 onClick={() => {
                   handleClick(item._id);
                 }}

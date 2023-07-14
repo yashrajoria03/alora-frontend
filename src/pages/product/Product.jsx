@@ -9,62 +9,17 @@ import AuthContext from "../../context/AuthContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 
-import {
-  AiOutlineMinus,
-  AiOutlinePicCenter,
-  AiOutlinePlus,
-} from "react-icons/ai";
+import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { TbDiscountCheck } from "react-icons/tb";
 import AllProductContext from "../../context/AllProductContext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useCookies } from "react-cookie";
 
+// const WEBLINK = "https://alora.onrender.com";
 const WEBLINK = "https://alora.onrender.com";
 
 const Product = () => {
-  //   const data = {
-  //     _id: "647cf2d681a0556786538f6a",
-  //     user_email: "shivamggupta2604@gmail.com",
-  //     name: "Sony WH-CH720N",
-  //     main_image: "https://m.media-amazon.com/images/I/41tp0JPPlmL._SX679_.jpg",
-  //     all_images: [
-  //       "https://m.media-amazon.com/images/I/41tp0JPPlmL._SX679_.jpg",
-  //       "https://m.media-amazon.com/images/I/81Y1Mr0iVWL._SX679_.jpg",
-  //       "https://m.media-amazon.com/images/I/71l4F-4Mc2L._SX679_.jpg",
-  //       "https://m.media-amazon.com/images/I/91hx2gnY0qL._SX679_.jpg",
-  //     ],
-  //     brand: "Sony",
-  //     category: "Headphones",
-  //     tagline:
-  //       "Sony WH-CH720N, Wireless Over-Ear Active Noise Cancellation Headphones with Mic, up to 50 Hours Playtime, Multi-Point Connection, App Support, AUX & Voice Assistant Support for Mobile Phones (White)",
-  //     description: [
-  //       "Sound Quality: Truly immerse yourself in your games with hardware-driven virtual 7.1 surround sound for precisely located audio",
-  //       "Sony’s lightest Wireless Noise-cancelling headband ever with up to 50-hour battery life with quick charging (3 min charge for up to 1 hour of playback)",
-  //       "Build Quality: Its luxurious noise-isolating memory foam ear pads and adjustable split headband which reduces pressure and provides optimal comfort for long gaming sessions",
-  //     ],
-  //     rating: 0,
-  //     numReviews: 0,
-  //     price: 9990,
-  //     countInStock: 9,
-  //     offers: [
-  //       {
-  //         offer: "Bank Offer",
-  //         description:
-  //           "Flat INR 3000 Instant Discount on HDFC Bank Credit Card Transactions. Min purchase value INR 34999",
-  //         _id: "647a228cb91ea6a6a5b06dff",
-  //         createdAt: "2023-06-02T17:10:36.415Z",
-  //         updatedAt: "2023-06-02T17:10:36.415Z",
-  //       },
-  //       {
-  //         offer: "Cashback Offer",
-  //         description: "Get ₹ 30 cashback if you buy with other items in cart",
-  //         _id: "647a228cb91ea6a6a5b06e00",
-  //         createdAt: "2023-06-02T17:10:36.416Z",
-  //         updatedAt: "2023-06-02T17:10:36.416Z",
-  //       },
-  //     ],
-  //     reviews: [],
-  //   };
   const location = useLocation();
   const currentId = location.pathname.split("/")[2];
   const { user } = useContext(AuthContext);
@@ -75,6 +30,7 @@ const Product = () => {
   const [product, setProduct] = useState([]);
   const [qty, setQty] = useState(1);
   const [source, setSource] = useState(null);
+  const [cookies, setCookies, remove] = useCookies(["access_token"]);
 
   const [rating, setRating] = useState(1);
   const [review, setReview] = useState("");
@@ -95,13 +51,16 @@ const Product = () => {
   };
   const handleSubmit = async () => {
     await axios
-      .put(`${WEBLINK}/api/products/review/${currentId}`, {
-        username: user.username,
-        profile: user.image,
-        title: reviewTitle,
-        star: rating,
-        review: review,
-      })
+      .put(
+        `${WEBLINK}/api/products/review/${currentId}/${cookies.access_token}`,
+        {
+          username: user.username,
+          profile: user.image,
+          title: reviewTitle,
+          star: rating,
+          review: review,
+        }
+      )
       .then((res) => {
         AllProductDispatch(
           addReview(currentId, {
@@ -150,7 +109,7 @@ const Product = () => {
       });
       setQty(1);
     } else {
-      addToCart(user._id, currentId, qty)(cartDispatch);
+      addToCart(user._id, currentId, qty, cookies.access_token)(cartDispatch);
       toast.info(" Added to cart!", {
         position: "top-right",
         autoClose: 1000,
@@ -243,7 +202,7 @@ const Product = () => {
               Brand: {product.brand}
             </h1>
             <h1 className="text-accent text-sm font-normal">
-              {product.rating} Ratings
+              {product.rating.toFixed(2)} Ratings
             </h1>
             <h1 className="text-2xl font-semibold mt-4 ">₹ {product.price}</h1>
             <hr className="w-full text-gray-200 mt-4 mx-auto" />

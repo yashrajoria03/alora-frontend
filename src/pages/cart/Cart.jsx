@@ -15,15 +15,15 @@ import {
   updateCart,
 } from "../../controllers/cartController";
 import empty from "../../assets/image/empty.png";
-import Nav from "../../components/navbar/Navbar";
-import Footer from "../../components/footer/Footer";
+import { useCookies } from "react-cookie";
+
 const WEBLINK = "https://alora.onrender.com";
 
 const Cart = () => {
   const navigate = useNavigate();
 
   const { productList } = useContext(AllProductContext);
-  //   const [cart, cartId] = useState(null);
+  const [cookies, setCookie, removeCookie] = useCookies(["access_token"]);
   const { cart, cartDispatch } = useContext(CartContext);
   const { user, dispatch } = useContext(AuthContext);
 
@@ -34,7 +34,9 @@ const Cart = () => {
   useEffect(() => {
     const getCart = async (userId) => {
       try {
-        const res = await axios.get(`${WEBLINK}/api/cart/find/${userId}`);
+        const res = await axios.get(
+          `${WEBLINK}/api/cart/find/${userId}/${cookies.access_token}`
+        );
         cartDispatch({ type: "GET_CART", payload: res.data });
       } catch (err) {
         console.log(err);
@@ -44,7 +46,7 @@ const Cart = () => {
   }, []);
 
   const handleDelete = (id) => {
-    deleteFromCart(user._id, id)(cartDispatch);
+    deleteFromCart(user._id, id, cookies.access_token)(cartDispatch);
   };
   const handleDeleteSelected = () => {
     if (selectedProducts) {
@@ -65,47 +67,8 @@ const Cart = () => {
 
   // const changeQty = (productId, operator) => {};
 
-  const location = useLocation();
   // const currentId = location.pathname.split("/")[2];
 
-  // const data = {
-  //   _id: {
-  //     $oid: "647cfdc0b9c602a0e6927d4a",
-  //   },
-  //   items: [
-  //     {
-  //       productId: {
-  //         $oid: "647cf2d681a0556786538f5d",
-  //       },
-  //       qty: 1,
-  //       _id: {
-  //         $oid: "647d65ccb9c602a0e6927e60",
-  //       },
-  //     },
-  //     {
-  //       productId: {
-  //         $oid: "647cf2d681a0556786538f60",
-  //       },
-  //       qty: 1,
-  //       _id: {
-  //         $oid: "647d95fcb9c602a0e69281b0",
-  //       },
-  //     },
-  //     {
-  //       productId: {
-  //         $oid: "647cf2d681a0556786538f5e",
-  //       },
-  //       qty: 1,
-  //       _id: {
-  //         $oid: "647db3b2b9c602a0e6928296",
-  //       },
-  //     },
-  //   ],
-  //   createdAt: {
-  //     $date: "2023-06-04T21:10:24.989Z",
-  //   },
-  //   __v: 14,
-  // };
   return !cart || !cart.items || cart.items.length == 0 ? (
     <div className="w-full mx-auto container h-[50vh]  flex flex-col items-center justify-center ">
       <img src={empty} alt="cart empty" className="h-[200px] w-[200px]" />
