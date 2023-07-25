@@ -5,7 +5,7 @@ import CartContext from "../context/cartContext";
 import { useCookies } from "react-cookie";
 
 // const WEBLINK = "http://localhost:800/";
-const WEBLINK = "http://localhost:8000/";
+const WEBLINK = "https://alora.onrender.com/";
 
 export const getCart = (id, token) => (dispatch) => {
   axios
