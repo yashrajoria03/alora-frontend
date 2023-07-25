@@ -8,12 +8,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const WEBLINK = "https://alora.onrender.com";
+
 // const stripeKey ="pk_test_51LYVLbSAyvMVxYE2WSZasSLU9snSJwJq1HFWGh6mWtdZHg0KqnHBmQKmXwd8t6EhTpLUOpsXnpFx6aWGhqEPzCGp000DQEVv6x";
 const Checkout = () => {
   const { cart, cartDispatch } = useContext(CartContext);
   const { user } = useContext(AuthContext);
   const [cookies, setCookie, removeCookie] = useCookies(["access_token"]);
-  const [response, setResponse] = useState();
 
   const [address, setAddress] = useState({
     country: "India",
@@ -149,16 +149,6 @@ const Checkout = () => {
 
     return true;
   };
-
-  // const handleButtonClick = () => {
-  //   if (true) {
-  //     const stripe = window.Stripe(stripeKey);
-  //     stripe.redirectToCheckout({
-  //       successUrl: `${WEBLINK}/api/order/success`,
-  //       cancelUrl: `${WEBLINK}/api/order/fail`,
-  //     });
-  //   }
-  // };
 
   return (
     <div className=" mx-auto w-full  md:container px-6 font-inter flex flex-col md:justify-start justify-center gap-4 py-2">
@@ -331,7 +321,7 @@ const Checkout = () => {
                         <img
                           src={item.img}
                           key={idx}
-                          alt="pro-image"
+                          alt={`${idx} iamge`}
                           className="h-24 w-24"
                         />
                       </div>

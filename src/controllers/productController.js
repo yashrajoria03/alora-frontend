@@ -1,8 +1,7 @@
 import axios from "axios";
 
-const WEBLINK = "https://alora.onrender.com";
-
-export const getItems = (id) => (dispatch) => {
+//localhost:8000
+http: export const getItems = (id) => (dispatch) => {
   axios
     .get(`${WEBLINK}/api/products/find/${id}`)
     .then((res) =>

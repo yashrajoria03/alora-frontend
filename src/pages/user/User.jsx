@@ -1,14 +1,17 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../../context/AuthContext";
+import { useCookies } from "react-cookie";
 import axios from "axios";
 
 const WEBLINK = "https://alora.onrender.com";
+
 const User = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
   const [order, setOrder] = useState([]);
+  const [cookies, setCookies, remove] = useCookies(["access_token"]);
 
   if (!user) {
     navigate("/login");
@@ -17,14 +20,12 @@ const User = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        await axios
-          .get(`${WEBLINK}/api/order/find/${user._id}`)
-          .then((res) => {
-            return res.data;
-          })
-          .then((res) => {
-            setOrder(res);
-          });
+        const data = await axios.get(
+          `${WEBLINK}/api/order/find/${user._id}/${cookies.access_token}`
+        );
+        if (data) {
+          setOrder(data.data);
+        }
       } catch (err) {
         console.log(err);
       }
@@ -70,7 +71,7 @@ const User = () => {
                     id="grid-name"
                     name="firstName"
                     disabled
-                    value={user.username}
+                    value={user.name.split(" ")[0]}
                   />
                 </div>
                 <div className="w-full md:w-1/2 px-3 ">
@@ -86,7 +87,7 @@ const User = () => {
                     id="grid-name"
                     name="lastName"
                     disabled
-                    value={user.username}
+                    value={user.name.split(" ")[1]}
                   />
                 </div>
               </div>

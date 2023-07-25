@@ -9,27 +9,33 @@ import Logo from "../../assets/image/logo.png";
 import { useCookies } from "react-cookie";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import loginImg from "../../assets/image/login.png";
 import loginImg2 from "../../assets/image/login2.jpg";
-import { useEffect } from "react";
+import jwt_decode from "jwt-decode";
+// import { Button } from "@material-tailwind/react";
+
+import {
+  useGoogleLogin,
+  GoogleLogin,
+  hasGrantedAllScopesGoogle,
+} from "@react-oauth/google";
 
 const WEBLINK = "https://alora.onrender.com";
+
 export const Login = () => {
   const navigate = useNavigate();
   const { user, dispatch } = useContext(AuthContext);
-  const { cart, cartDispatch } = useContext(CartContext);
+  const { cartDispatch } = useContext(CartContext);
 
   if (user) navigate("/");
 
   //toggle for login/register
   const [state, setState] = useState(true);
-  const [msg, setMsg] = useState("");
   const [loginCred, setLoginCred] = useState({
-    username: undefined,
+    email: undefined,
     password: undefined,
   });
   const [regCred, setRegCred] = useState({
-    username: undefined,
+    email: undefined,
     email: undefined,
     password: undefined,
   });
@@ -41,15 +47,12 @@ export const Login = () => {
       setLoginCred((prev) => ({ ...prev, [e.target.id]: e.target.value }));
     else setRegCred((prev) => ({ ...prev, [e.target.id]: e.target.value }));
   };
-  const callState = () => {
-    setState(!state);
-  };
 
   //function to fetch cart
-  const getCart = async (userId) => {
+  const getCart = async (userId, access_token) => {
     try {
       const res = await axios.get(
-        `${WEBLINK}/api/cart/find/${userId}/${cookies.access_token}`
+        `${WEBLINK}/api/cart/find/${userId}/${access_token}`
       );
       cartDispatch({ type: "GET_CART", payload: res.data });
     } catch (err) {
@@ -72,8 +75,10 @@ export const Login = () => {
           progress: undefined,
           theme: "colored",
         });
-        navigate("/login");
-        setState(!state);
+        setCookie("access_token", res.data.token);
+        dispatch({ type: "LOGIN_SUCCESS", payload: res.data.details });
+        getCart(res.data.details._id, res.data.token);
+        navigate("/");
         // alert("Registered Successfully!");
       } catch (err) {
         console.log(err);
@@ -81,7 +86,7 @@ export const Login = () => {
     } else {
       try {
         const res = await axios.post(`${WEBLINK}/api/auth/login`, loginCred);
-        toast.success(`Welcome ${loginCred.username}!`, {
+        toast.success(`Welcome ${loginCred.email}!`, {
           position: "top-center",
           autoClose: 2000,
           hideProgressBar: false,
@@ -101,124 +106,70 @@ export const Login = () => {
     }
   };
 
-  // return (
-  //   <div className="forms-section">
-  //     <ToastContainer
-  //       position="top-center"
-  //       autoClose={2000}
-  //       hideProgressBar={false}
-  //       newestOnTop={false}
-  //       closeOnClick
-  //       rtl={false}
-  //       pauseOnFocusLoss
-  //       draggable
-  //       pauseOnHover
-  //       theme="colored"
-  //     />
-  //     {/* <div className="msg">{msg}</div> */}
-  //     <div className="forms">
-  //       <div className={state ? "is-active form-wrapper " : "form-wrapper "}>
-  //         <button
-  //           type="button"
-  //           className="switcher switcher-login"
-  //           onClick={callState}
-  //         >
-  //           Login
-  //           <span className="underline"></span>
-  //         </button>
-  //         <form className="form form-login">
-  //           <fieldset>
-  //             <legend>
-  //               Please, enter your username and password for login.
-  //             </legend>
-  //             <div className="input-block">
-  //               <label for="username">Username</label>
-  //               <input
-  //                 id="username"
-  //                 type="text"
-  //                 onChange={handleChange}
-  //                 required
-  //               />
-  //             </div>
-  //             <div className="input-block">
-  //               <label for="password">Password</label>
-  //               <input
-  //                 id="password"
-  //                 type="password"
-  //                 onChange={handleChange}
-  //                 required
-  //               />
-  //             </div>
-  //           </fieldset>
-  //           <button type="submit" onClick={handleClick} className="btn-login">
-  //             Login
-  //           </button>
-  //         </form>
-  //       </div>
-  //       <div className={!state ? "is-active form-wrapper " : "form-wrapper "}>
-  //         <button
-  //           type="button"
-  //           className="switcher switcher-signup"
-  //           onClick={callState}
-  //         >
-  //           Sign Up
-  //           <span className="underline"></span>
-  //         </button>
-  //         <form className="form form-signup">
-  //           <fieldset>
-  //             <legend>
-  //               Please, enter your username, password and password confirmation
-  //               for sign up.
-  //             </legend>
-  //             <div className="input-block">
-  //               <label for="username">Username</label>
-  //               <input
-  //                 id="username"
-  //                 type="text"
-  //                 onChange={handleChange}
-  //                 required
-  //               />
-  //             </div>
-  //             <div className="input-block">
-  //               <label for="email">Email</label>
-  //               <input
-  // onChange = { handleChange };
-  //                 id="email"
-  //                 type="email"
-  //                 onChange={handleChange}
-  //                 required
-  //               />
-  //             </div>
-  //             <div className="input-block">
-  //               <label for="password">Password</label>
-  //               <input
-  //                 id="password"
-  //                 type="password"
-  //                 onChange={handleChange}
-  //                 required
-  //               />
-  //             </div>
-  //           </fieldset>
-  //           <button type="submit" onClick={handleClick} className="btn-signup">
-  //             Continue
-  //           </button>
-  //         </form>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
+  const onLoginSuccess = async (tokenResponse) => {
+    const response = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${tokenResponse.access_token}`,
+        },
+      }
+    );
+    const decoded = response.data;
+    try {
+      const data = await axios.get(
+        `${WEBLINK}/api/users/find/${decoded.email}`
+      );
+      if (data.data == null) {
+        const res = await axios.post(`${WEBLINK}/api/auth/google/register`, {
+          name: decoded.name,
+          email: decoded.email,
+          profile: decoded.picture,
+        });
+        toast.success(`Registered Successfully!`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+        });
+        setCookie("access_token", res.data.token);
+        dispatch({ type: "LOGIN_SUCCESS", payload: res.data.details });
+        getCart(res.data.details._id, res.data.token);
+        navigate("/");
+      } else {
+        const user = data.data;
+        const res = await axios.post(`${WEBLINK}/api/auth/google/login`, {
+          email: user.email,
+        });
+        toast.success(`Welcome ${res.data.details.name}!`, {
+          position: "top-center",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: false,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+        });
+        setCookie("access_token", res.data.token);
+        dispatch({ type: "LOGIN_SUCCESS", payload: res.data.details });
+        getCart(res.data.details._id, res.data.token);
+        navigate("/");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const onLoginFail = (res) => {
+    console.log(res);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
-      <ToastContainer
-        position="top-center"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        draggable
-        theme="colored"
-      />
       <div className="max-w-screen-xl m-0 sm:m-10 bg-white shadow sm:rounded-lg flex justify-center flex-1">
         <div className="lg:w-1/2 xl:w-5/12 p-6 sm:p-12">
           <div>
@@ -228,7 +179,14 @@ export const Login = () => {
             <h1 className="text-2xl xl:text-3xl font-extrabold">Sign up</h1>
             <div className="w-full flex-1 mt-8">
               <div className="flex flex-col items-center">
-                <button className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-blue-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline">
+                <button
+                  className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-blue-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline"
+                  onClick={useGoogleLogin({
+                    onSuccess: (tokenResponse) => {
+                      onLoginSuccess(tokenResponse);
+                    },
+                  })}
+                >
                   <div className="bg-white p-2 rounded-full">
                     <svg className="w-4" viewBox="0 0 533.5 544.3">
                       <path
@@ -249,15 +207,19 @@ export const Login = () => {
                       />
                     </svg>
                   </div>
-
-                  <span className="ml-4">Login with Google</span>
+                  <span className="ml-4">Login in with Google</span>
                 </button>
+                {/* <GoogleLogin
+                  onSuccess={onLoginSuccess}
+                  onError={onLoginFail}
+                  className="w-32 h-10"
+                /> */}
 
                 <button className="w-full max-w-xs font-bold shadow-sm rounded-lg py-3 bg-blue-100 text-gray-800 flex items-center justify-center transition-all duration-300 ease-in-out focus:outline-none hover:shadow focus:shadow-sm focus:shadow-outline mt-5">
                   <div className="bg-white p-1 rounded-full">
                     <svg className="w-6" viewBox="0 0 32 32">
                       <path
-                        fill-rule="evenodd"
+                        fillRule="evenodd"
                         d="M16 4C9.371 4 4 9.371 4 16c0 5.3 3.438 9.8 8.207 11.387.602.11.82-.258.82-.578 0-.286-.011-1.04-.015-2.04-3.34.723-4.043-1.609-4.043-1.609-.547-1.387-1.332-1.758-1.332-1.758-1.09-.742.082-.726.082-.726 1.203.086 1.836 1.234 1.836 1.234 1.07 1.836 2.808 1.305 3.492 1 .11-.777.422-1.305.762-1.605-2.664-.301-5.465-1.332-5.465-5.93 0-1.313.469-2.383 1.234-3.223-.121-.3-.535-1.523.117-3.175 0 0 1.008-.32 3.301 1.23A11.487 11.487 0 0116 9.805c1.02.004 2.047.136 3.004.402 2.293-1.55 3.297-1.23 3.297-1.23.656 1.652.246 2.875.12 3.175.77.84 1.231 1.91 1.231 3.223 0 4.61-2.804 5.621-5.476 5.922.43.367.812 1.101.812 2.219 0 1.605-.011 2.898-.011 3.293 0 .32.214.695.824.578C24.566 25.797 28 21.3 28 16c0-6.629-5.371-12-12-12z"
                       />
                     </svg>
@@ -265,21 +227,19 @@ export const Login = () => {
                   <span className="ml-4">Login in with GitHub</span>
                 </button>
               </div>
-
               <div className="my-12 border-b text-center">
                 <div className="leading-none px-2 inline-block text-sm text-gray-600 tracking-wide font-medium bg-white transform translate-y-1/2">
-                  Or login in with username
+                  Or login in with email
                 </div>
               </div>
-
               {state && (
                 <div className="mx-auto max-w-xs">
                   <input
                     onChange={handleChange}
                     className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
                     type="text"
-                    id="username"
-                    placeholder="username"
+                    id="email"
+                    placeholder="email"
                   />
                   <input
                     onChange={handleChange}
@@ -296,9 +256,9 @@ export const Login = () => {
                       className="w-6 h-6 -ml-2"
                       fill="none"
                       stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
                       <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                       <circle cx="8.5" cy="7" r="4" />
@@ -324,8 +284,8 @@ export const Login = () => {
                     onChange={handleChange}
                     className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white"
                     type="text"
-                    id="username"
-                    placeholder="username"
+                    id="name"
+                    placeholder="name"
                     required
                   />
                   <input
@@ -352,9 +312,9 @@ export const Login = () => {
                       className="w-6 h-6 -ml-2"
                       fill="none"
                       stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     >
                       <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                       <circle cx="8.5" cy="7" r="4" />

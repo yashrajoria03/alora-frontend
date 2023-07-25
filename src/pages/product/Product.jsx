@@ -16,7 +16,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useCookies } from "react-cookie";
 
-// const WEBLINK = "https://alora.onrender.com";
 const WEBLINK = "https://alora.onrender.com";
 
 const Product = () => {
@@ -52,9 +51,9 @@ const Product = () => {
   const handleSubmit = async () => {
     await axios
       .put(
-        `${WEBLINK}/api/products/review/${currentId}/${cookies.access_token}`,
+        `${WEBLINK}/api/products/review/${currentId}/${user._id}/${cookies.access_token}`,
         {
-          username: user.username,
+          name: user.name,
           profile: user.image,
           title: reviewTitle,
           star: rating,
@@ -64,7 +63,7 @@ const Product = () => {
       .then((res) => {
         AllProductDispatch(
           addReview(currentId, {
-            username: user.username,
+            name: user.name,
             title: reviewTitle,
             profile: user.image,
             star: rating,
@@ -72,6 +71,7 @@ const Product = () => {
           })
         );
         setIsModalOpen(false);
+        window.location.reload(true);
       })
       .catch((err) => {
         console.log(err);
@@ -518,45 +518,48 @@ const Product = () => {
               </div>
             </div>
             <div className="w-1/2 overflow-y-scroll max-h-[300px]  py-2 flex flex-col  gap-2 border border-gray-200 rounded-md p-2">
-              {product.reviews.map((item) => {
-                return (
-                  <div className="w-full h-auto ">
-                    <article>
-                      <div className="flex items-center mb-4 space-x-4">
-                        <img
-                          className="w-10 h-10 rounded-full"
-                          src={item.profile}
-                          alt="profile picture"
-                        />
-                        <div className="space-y-1 font-medium ">
-                          <p>{item.username}</p>
+              {product.reviews
+                .slice(0)
+                .reverse()
+                .map((item) => {
+                  return (
+                    <div className="w-full h-auto ">
+                      <article>
+                        <div className="flex items-center mb-4 space-x-4">
+                          <img
+                            className="w-10 h-10 rounded-full"
+                            src={item.profile}
+                            alt="profile picture"
+                          />
+                          <div className="space-y-1 font-medium ">
+                            <p>{item.name}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center mb-1">
-                        {renderStars(item.star)}
-                        <h3 className="ml-2 text-sm font-semibold text-gray-900 ">
-                          {item.title}
-                        </h3>
-                      </div>
-                      <footer className="mb-5 text-sm text-gray-500 dark:text-gray-400">
-                        <p>
-                          Reviewed on &nbsp;
-                          <time datetime="2017-03-03 19:00">
-                            {new Date(item.createdAt).toLocaleDateString(
-                              "en-US",
-                              options
-                            )}
-                          </time>
+                        <div className="flex items-center mb-1">
+                          {renderStars(item.star)}
+                          <h3 className="ml-2 text-sm font-semibold text-gray-900 ">
+                            {item.title}
+                          </h3>
+                        </div>
+                        <footer className="mb-5 text-sm text-gray-500 dark:text-gray-400">
+                          <p>
+                            Reviewed on &nbsp;
+                            <time datetime="2017-03-03 19:00">
+                              {new Date(item.createdAt).toLocaleDateString(
+                                "en-US",
+                                options
+                              )}
+                            </time>
+                          </p>
+                        </footer>
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">
+                          {item.review}
                         </p>
-                      </footer>
-                      <p className="mb-2 text-gray-500 dark:text-gray-400">
-                        {item.review}
-                      </p>
-                      <hr className="mb-2" />
-                    </article>
-                  </div>
-                );
-              })}
+                        <hr className="mb-2" />
+                      </article>
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}

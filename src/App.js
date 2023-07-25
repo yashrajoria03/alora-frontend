@@ -13,6 +13,7 @@ import Footer from "./components/footer/Footer";
 import NoNavLayout from "./components/layout/NoNavLayout";
 import GeneralUserLayout from "./components/layout/GeneralLayout";
 import NoFootLayout from "./components/layout/NoFootLayout";
+import { ToastContainer, toast } from "react-toastify";
 import User from "./pages/user/User";
 // import Result from "./pages/result/Result";
 
@@ -24,6 +25,16 @@ function App() {
   // };
   return (
     <BrowserRouter>
+      <ToastContainer
+        position="top-center"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        draggable
+        theme="colored"
+      />
       <Routes>
         <Route path="/" element={<NoNavLayout />}>
           <Route path="/login" element={<Login />} />
