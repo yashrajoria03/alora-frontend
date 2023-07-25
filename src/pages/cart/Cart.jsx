@@ -51,7 +51,7 @@ const Cart = () => {
   const handleDeleteSelected = () => {
     if (selectedProducts) {
       selectedProducts.map((id) => {
-        deleteFromCart(user._id, id)(cartDispatch);
+        deleteFromCart(user._id, id, cookies.access_token)(cartDispatch);
       });
       setSelectedProducts([]);
     }
