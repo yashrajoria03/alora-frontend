@@ -28,14 +28,12 @@ const Featured = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        await axios
-          .get(`${WEBLINK}/api/products/${cookies.access_token}`)
-          .then((data) => {
-            setProduct(data.data);
-            setLoading(true);
-            AllProductDispatch({ type: "GET_LIST", payload: data.data });
-            return data.data;
-          });
+        await axios.get(`${WEBLINK}/api/products/`).then((data) => {
+          setProduct(data.data);
+          setLoading(true);
+          AllProductDispatch({ type: "GET_LIST", payload: data.data });
+          return data.data;
+        });
 
         // console.log("fetched data is:", fetchedProducts);
       } catch (err) {
